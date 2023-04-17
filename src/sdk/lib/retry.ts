@@ -1,6 +1,8 @@
 export class Delay {
   ms: number;
+
   reject: ((reason: string) => void) | null = null;
+
   timer: NodeJS.Timeout | null = null;
 
   constructor(ms: number) {

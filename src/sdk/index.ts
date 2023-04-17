@@ -1,10 +1,11 @@
+import {Run} from './wandb_run.js';
+
 export {init} from './wandb_init.js';
 export {login} from './wandb_login.js';
 export {Run} from './wandb_run.js';
-import {Run} from './wandb_run.js';
 export * as integrations from './integrations/index.js';
 
-export let runPromise: Promise<Run> | null = null;
+export var runPromise: Promise<Run> | null = null;
 
 export async function log(data: object, step?: number, commit?: boolean) {
   if (runPromise == null) {
@@ -20,5 +21,4 @@ export async function finish(code?: number) {
   }
   const run = await runPromise;
   await run.finish(code);
-  return;
 }

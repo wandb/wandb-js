@@ -1,6 +1,6 @@
+import * as crypto from 'crypto';
 import {Media} from './media.js';
 import {Run} from '../wandb_run.js';
-import * as crypto from 'crypto';
 
 function hashId(s: string): string {
   return crypto.createHash('md5').update(s, 'utf8').digest('hex').slice(0, 16);
@@ -38,7 +38,9 @@ export enum SpanKind {
 
 export class WBTraceTree extends Media {
   private static _log_type = 'wb_trace_tree';
+
   private _root_span: Span;
+
   private _model_dict: Record<string, unknown> | null;
 
   constructor(
@@ -57,15 +59,15 @@ export class WBTraceTree extends Media {
 
   toJSON(_?: Run): Record<string, unknown> {
     const res: Record<string, unknown> = {};
-    res['_type'] = WBTraceTree._log_type;
+    res._type = WBTraceTree._log_type;
     // Here we use `JSON.stringify` to put things into string format. This is because
     // the complex data structures create problems for gorilla history to parquet.
     if (this._model_dict != null) {
       const model_dump_str = JSON.stringify(this._model_dict);
-      res['model_hash'] = hashId(model_dump_str);
-      res['model_dict_dumps'] = model_dump_str;
+      res.model_hash = hashId(model_dump_str);
+      res.model_dict_dumps = model_dump_str;
     }
-    res['root_span_dumps'] = JSON.stringify(this._root_span);
+    res.root_span_dumps = JSON.stringify(this._root_span);
     return res;
   }
 

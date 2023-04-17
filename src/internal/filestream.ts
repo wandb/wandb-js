@@ -35,15 +35,25 @@ interface LastChunk {
 export class FileStream {
   // TODO:  Consider changing this to bytes
   MAX_ITEMS = 10000;
+
   code = 0;
+
   private _thread: Promise<void>;
+
   private runPath: string;
+
   private offsets: FsOffsets = {};
+
   private settings: Settings;
+
   private queue: Queue<FsRecordData>;
+
   private shutdown = false;
-  private started: number = 0;
+
+  private started = 0;
+
   private delay: Delay;
+
   private lastChunks: {[key: string]: LastChunk} = {
     'wandb-history.jsonl': {offset: 0, data: {}},
     'wandb-summary.json': {offset: 0, data: {}},
@@ -159,11 +169,11 @@ export class FileStream {
     const elapsed = this.runtimeSeconds();
     if (elapsed < 30) {
       return 2_000;
-    } else if (elapsed < 30 * 5) {
+    } if (elapsed < 30 * 5) {
       return 10_000;
-    } else {
+    } 
       return 30_000;
-    }
+    
   }
 
   private async send(fsdata: FsFilesData | FsFinishedData) {
@@ -175,7 +185,7 @@ export class FileStream {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Basic ${Buffer.from(
-            'api:' + this.settings.apiKey
+            `api:${  this.settings.apiKey}`
           ).toString('base64')}`,
         },
       }),

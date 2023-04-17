@@ -24,8 +24,11 @@ import wandb from '../../../index.js';
 
 export class WandbTracer extends BaseTracer {
   static _instance: WandbTracer | null = null;
+
   private static _run: Run | null = null;
+
   private static _runArgs: any | null = null;
+
   private _session: TracerSession | null = null;
 
   constructor() {
@@ -34,7 +37,7 @@ export class WandbTracer extends BaseTracer {
 
   static async watchAll(
     runArgs: InitOptions | null = null,
-    includeStdout: boolean = true,
+    includeStdout = true,
     additionalHandlers: BaseCallbackHandler[] = []
   ): Promise<Run | null> {
     const tracer = new WandbTracer();
@@ -79,7 +82,7 @@ export class WandbTracer extends BaseTracer {
     const newRunArgs: InitOptions = {...runArgs};
 
     if (!('settings' in newRunArgs)) {
-      newRunArgs['settings'] = settingsWithOverrides({silent: true});
+      newRunArgs.settings = settingsWithOverrides({silent: true});
     }
 
     const run = await wandb.init(newRunArgs);

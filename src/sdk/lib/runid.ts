@@ -1,6 +1,6 @@
 import {randomBytes} from 'crypto';
 
-export function generateId(length: number = 8): string {
+export function generateId(length = 8): string {
   const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
 

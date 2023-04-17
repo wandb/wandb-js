@@ -2,6 +2,7 @@ import {isNode} from './util.js';
 
 export class Auth {
   key?: string;
+
   timeout?: number;
 
   constructor(key?: string, timeout?: number) {
@@ -11,7 +12,7 @@ export class Auth {
 
   async ensureKey(
     host?: string,
-    relogin: boolean = false
+    relogin = false
   ): Promise<string | undefined> {
     if (this.key && !relogin) {
       return this.key;
@@ -104,7 +105,7 @@ export class Auth {
           rl.output.write('*');
         };
       });
-    } else {
+    } 
       return new Promise((resolve, reject) => {
         let timeout: NodeJS.Timeout | null = null;
         if (this.timeout) {
@@ -123,6 +124,6 @@ export class Auth {
         }
         resolve(key || undefined);
       });
-    }
+    
   }
 }

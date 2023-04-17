@@ -6,11 +6,17 @@ import {WBValue} from './wb_value.js';
 
 export abstract class Media extends WBValue {
   protected _path?: string;
+
   protected _run?: Run;
+
   protected _caption?: string;
+
   protected _isTmp?: boolean;
+
   protected _extension?: string;
+
   protected _sha256?: string;
+
   protected _size?: number;
 
   constructor(caption?: string) {
@@ -22,7 +28,7 @@ export abstract class Media extends WBValue {
 
   protected _setFile(
     path: string,
-    isTmp: boolean = false,
+    isTmp = false,
     extension?: string
   ): void {
     this._path = path;
@@ -39,9 +45,9 @@ export abstract class Media extends WBValue {
   static captions(mediaItems: Media[]): boolean | Array<string | undefined> {
     if (mediaItems[0]._caption !== undefined) {
       return mediaItems.map(m => m._caption);
-    } else {
+    } 
       return false;
-    }
+    
   }
 
   isBound(): boolean {
@@ -52,7 +58,7 @@ export abstract class Media extends WBValue {
     return this._path !== undefined && this._sha256 !== undefined;
   }
 
-  /*run: Run,
+  /* run: Run,
     key: number | string,
     step: number | string,
     id_?: number | string,

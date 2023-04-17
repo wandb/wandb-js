@@ -4,11 +4,17 @@ import wandb from '../index.js';
 
 export class Run {
   project: string;
+
   entity: string;
+
   id: string;
+
   settings: Settings;
+
   step: number;
+
   name?: string;
+
   _messenger: Messenger;
 
   constructor(

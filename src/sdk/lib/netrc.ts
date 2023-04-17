@@ -4,6 +4,7 @@ import * as path from 'path';
 
 export default class NetRC {
   filename: string;
+
   machines: {[key: string]: Machine} = {};
 
   constructor() {
@@ -47,26 +48,26 @@ export default class NetRC {
 
   host(hostname: string) {
     if (!this.machines[hostname])
-      this.error('Machine ' + hostname + ' not found in ' + this.filename);
+      this.error(`Machine ${  hostname  } not found in ${  this.filename}`);
     return this.machines[hostname];
   }
 
   parse() {
     if (!fs.existsSync(this.filename))
-      this.error('File does not exist: ' + this.filename);
+      this.error(`File does not exist: ${  this.filename}`);
     this.machines = {};
-    var data = fs.readFileSync(this.filename, 'utf-8');
+    let data = fs.readFileSync(this.filename, 'utf-8');
 
     // Remove comments
-    var lines = data.split('\n');
-    for (var n in lines) {
-      var i = lines[n].indexOf('#');
+    const lines = data.split('\n');
+    for (const n in lines) {
+      const i = lines[n].indexOf('#');
       if (i > -1) lines[n] = lines[n].substring(0, i);
     }
     data = lines.join('\n');
 
-    var tokens = data.split(/[ \t\n\r]+/);
-    var machine = new Machine();
+    const tokens = data.split(/[ \t\n\r]+/);
+    let machine = new Machine();
     tokens.forEach((token, i) => {
       if (token === 'machine') {
         machine = new Machine();
@@ -82,7 +83,7 @@ export default class NetRC {
 
   // Allow spaces and other weird characters in passwords by supporting \xHH
   unescape(s: string) {
-    var match = /\\x([0-9a-fA-F]{2})/.exec(s);
+    const match = /\\x([0-9a-fA-F]{2})/.exec(s);
     if (match) {
       s =
         s.substring(0, match.index) +
@@ -94,13 +95,16 @@ export default class NetRC {
 
   error(message: string) {
     console.error('netrc: Error:', message);
-    throw new Error('netrc: Error: ' + message);
+    throw new Error(`netrc: Error: ${  message}`);
   }
 }
 
 class Machine {
-  machine: string = 'empty';
+  machine = 'empty';
+
   login?: string;
+
   password?: string;
+
   account?: string;
 }

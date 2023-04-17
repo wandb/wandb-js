@@ -121,6 +121,7 @@ const RunUploadUrlQueryDocument = graphql(/* GraphQL */ `
 
 export class InternalApi {
   client: GraphQLClient;
+
   defaultEntity: string;
 
   constructor(host: string, key?: string, entity?: string) {
@@ -132,7 +133,7 @@ export class InternalApi {
     return new GraphQLClient(`${host}/graphql`, {
       headers: {
         authorization: key
-          ? `Basic ${Buffer.from('api:' + key).toString('base64')}`
+          ? `Basic ${Buffer.from(`api:${  key}`).toString('base64')}`
           : '',
       },
       // only throw if we get a non-200 response

@@ -11,6 +11,4 @@ export const defaultSettings = {
   offline: process.env.WANDB_MODE === 'offline',
 };
 
-export const settingsWithOverrides = (overrides?: Partial<Settings>) => {
-  return Object.assign({}, defaultSettings, overrides);
-};
+export const settingsWithOverrides = (overrides?: Partial<Settings>) => ({ ...defaultSettings, ...overrides});

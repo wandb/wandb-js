@@ -9,12 +9,19 @@ import {SenderRecord} from '../sdk/interface/messenger.js';
 
 export class Sender {
   queue: Queue<SenderRecord>;
+
   delay: Delay;
+
   port: MessagePort | null;
+
   api: InternalApi;
+
   code: number;
+
   filestream: FileStream;
+
   _thread: Promise<void>;
+
   _shutdown: boolean;
 
   constructor(settings: Settings, port?: MessagePort) {
@@ -110,7 +117,7 @@ export class Sender {
             });
             break outside;
           default:
-            this.error('Unhandle message type: ' + record.type);
+            this.error(`Unhandle message type: ${  record.type}`);
         }
       }
     }

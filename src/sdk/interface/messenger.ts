@@ -90,8 +90,11 @@ export function initRunPayload({
 
 export class Messenger {
   port: MessagePort | Worker;
+
   exiting: Promise<void> | null = null;
+
   sender?: Sender;
+
   constructor(settings: Settings) {
     const channel = new MessageChannel();
     if (process.env.WANDB_WORKER === 'true') {

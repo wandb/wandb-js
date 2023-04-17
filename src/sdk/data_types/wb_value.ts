@@ -5,11 +5,13 @@ type TypeMappingType = {[key: string]: typeof WBValue};
 export class WBValue {
   // Class Attributes
   private static _typeMapping: TypeMappingType | null = null;
+
   protected static _logType: string | null = null;
 
   // Instance Attributes
   // TODO: types for artifacts
   private _artifactSource: any | null;
+
   private _artifactTarget: any | null;
 
   constructor() {
@@ -26,13 +28,13 @@ export class WBValue {
     throw new Error('NotImplementedError');
   }
 
-  static withSuffix(name: string, filetype: string = 'json'): string {
+  static withSuffix(name: string, filetype = 'json'): string {
     const suffix = this._logType ? `${this._logType}.${filetype}` : filetype;
     return name.endsWith(suffix) ? name : `${name}.${suffix}`;
   }
 
   static initFromJson(jsonObj: any, sourceArtifact: any): WBValue | null {
-    const classOption = WBValue.typeMapping()[jsonObj['_type']];
+    const classOption = WBValue.typeMapping()[jsonObj._type];
     if (classOption) {
       const obj = classOption.fromJSON(jsonObj, sourceArtifact);
       obj._setArtifactSource(sourceArtifact);

@@ -21,9 +21,9 @@ test('Test LLM Conversion', async () => {
     convertLcRunToWbSpan(run),
     safeMaybeModelDict(getSpanProducingObject(run))
   );
-  expect(tree.toJSON()['_type']).toEqual('wb_trace_tree');
-  const parsedConv = JSON.parse(tree.toJSON()['root_span_dumps'] as string);
-  parsedConv['start_time_ms'] = 100;
+  expect(tree.toJSON()._type).toEqual('wb_trace_tree');
+  const parsedConv = JSON.parse(tree.toJSON().root_span_dumps as string);
+  parsedConv.start_time_ms = 100;
   expect(parsedConv).toEqual({
     attributes: {
       execution_order: 1,
