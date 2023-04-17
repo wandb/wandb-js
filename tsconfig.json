@@ -25,7 +25,8 @@
     "strict": true
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "codegen.ts"
   ],
   "exclude": [
     "node_modules",
