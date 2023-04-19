@@ -1,4 +1,6 @@
 import {GraphQLClient} from 'graphql-request';
+// TODO: there's a way to make this work with treeshaking using babel...
+/* eslint-disable tree-shaking/no-side-effects-in-initialization */
 import {graphql} from '../gql/index.js';
 import {
   UpsertBucketMutation,
@@ -8,6 +10,7 @@ import {
   RunUploadUrlsQueryVariables,
   TypedDocumentString,
 } from '../gql/graphql.js';
+import {debugLog} from '../sdk/lib/util.js';
 import {requestWithRetry} from '../sdk/lib/retry.js';
 
 const UpsertBucketMutationDocument = graphql(/* GraphQL */ `
@@ -133,7 +136,7 @@ export class InternalApi {
     return new GraphQLClient(`${host}/graphql`, {
       headers: {
         authorization: key
-          ? `Basic ${Buffer.from(`api:${  key}`).toString('base64')}`
+          ? `Basic ${Buffer.from(`api:${key}`).toString('base64')}`
           : '',
       },
       // only throw if we get a non-200 response
@@ -144,8 +147,9 @@ export class InternalApi {
   // TODO: put this in a better place.
   async ensureDefaultEntity() {
     if (this.defaultEntity === '') {
+      debugLog('reading default entity from server');
       const viewer = await this.viewer();
-      if (viewer.viewer) {
+      if (viewer?.viewer) {
         this.defaultEntity = viewer.viewer.entity || '';
       }
     }
@@ -168,9 +172,11 @@ export class InternalApi {
     return this.execute(RunUploadUrlQueryDocument, vars);
   }
 
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   execute(query: TypedDocumentString<any, any>, vars: any): Promise<any> {
     // TODO: don't love this, but works for now
-    if (vars.entity == '') {
+    if (vars.entity === '') {
+      // eslint-disable-next-line no-param-reassign
       vars.entity = this.defaultEntity;
     }
     return requestWithRetry(this.client.request(query.toString(), vars), {

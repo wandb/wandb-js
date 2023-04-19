@@ -34,14 +34,15 @@ export class Run {
     this._messenger = messenger;
   }
 
-  log(data: any, step?: number, commit?: boolean) {
+  log(data: Record<string, unknown>, step?: number, commit?: boolean) {
     if (step != null) {
       this.step = step;
     }
+    // eslint-disable-next-line no-param-reassign
     data._step = this.step;
     this._messenger.log({data, step: this.step, commit});
     if (step == null) {
-      this.step++;
+      this.step += 1;
     }
   }
 

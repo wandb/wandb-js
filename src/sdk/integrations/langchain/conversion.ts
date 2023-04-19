@@ -1,4 +1,9 @@
-import {LLMRun, ChainRun, ToolRun} from './types.js';
+/* eslint-disable import/no-extraneous-dependencies, no-empty, no-param-reassign, no-instanceof/no-instanceof */
+import {BaseChain} from 'langchain/chains';
+import {BaseLLM} from 'langchain/llms';
+import {Tool} from 'langchain/tools';
+import {BaseChatModel} from 'langchain/chat_models';
+import {LLMRun, ChainRun, ToolRun, BaseRun} from './types.js';
 import {SpanKind, StatusCode} from '../../data_types/trace_tree.js';
 
 class EmptySpan {
@@ -7,76 +12,94 @@ class EmptySpan {
   }
 }
 
-export function getSpanProducingObject(run: any): any {
+type MaybeModels = BaseChain | BaseLLM | Tool | BaseChatModel | EmptySpan;
+
+export function getSpanProducingObject(run: BaseRun): MaybeModels {
   return run.serialized._self || new EmptySpan();
 }
 
-export function convertLcRunToWbSpan(run: LLMRun | ChainRun | ToolRun): any {
+// TODO: type our spans
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export function convertLcRunToWbSpan(run: BaseRun): any {
   if ((run as LLMRun).prompts != null) {
-    return convertLlmRunToWbSpan(run);
-  } if ((run as ChainRun).inputs != null) {
-    return convertChainRunToWbSpan(run);
-  } if ((run as ToolRun).tool_input != null) {
-    return convertToolRunToWbSpan(run);
-  } 
-    return convertRunToWbSpan(run);
-  
+    return convertLlmRunToWbSpan(run as LLMRun);
+  }
+  if ((run as ChainRun).inputs != null) {
+    return convertChainRunToWbSpan(run as ChainRun);
+  }
+  if ((run as ToolRun).tool_input != null) {
+    return convertToolRunToWbSpan(run as ToolRun);
+  }
+  return convertRunToWbSpan(run);
 }
 
-function convertLlmRunToWbSpan(run: any): any {
+function convertLlmRunToWbSpan(run: LLMRun): any {
   const baseSpan = convertRunToWbSpan(run);
 
   if (run.response != null) {
-    baseSpan.attributes.llm_output = run.response.llm_output;
+    baseSpan.attributes.llm_output = run.response.llmOutput;
   }
-  baseSpan.results = (run.serialized.prompts || []).map(
-    (prompt: any, ndx: number) => ({
-        inputs: {prompt},
-        outputs:
-          run.response != null &&
-          run.response.generations.length > ndx &&
-          run.response.generations[ndx].length > 0
-            ? {generation: run.response.generations[ndx][0].text}
-            : null,
-      })
-  );
+  baseSpan.results = (run.prompts || []).map((prompt: any, ndx: number) => ({
+    inputs: {prompt},
+    outputs:
+      run.response != null &&
+      run.response.generations.length > ndx &&
+      run.response.generations[ndx].length > 0
+        ? {generation: run.response.generations[ndx][0].text}
+        : null,
+  }));
   baseSpan.span_kind = SpanKind.LLM;
 
   return baseSpan;
 }
 
-export function convertChainRunToWbSpan(run: any): any {
+export function convertChainRunToWbSpan(run: ChainRun): any {
   const baseSpan = convertRunToWbSpan(run);
 
   baseSpan.results = [{inputs: run.inputs, outputs: run.outputs}];
-  baseSpan.child_spans = (run.child_runs || []).map((child_run: any) =>
-    convertLcRunToWbSpan(child_run)
+  const childRuns: BaseRun[] = [
+    ...run.child_llm_runs,
+    ...run.child_chain_runs,
+    ...run.child_tool_runs,
+  ];
+  baseSpan.child_spans = childRuns.map((childRun: BaseRun) =>
+    convertLcRunToWbSpan(childRun)
   );
-  baseSpan.span_kind =
-    getSpanProducingObject(run)._agentActionType() === 'single'
-      ? SpanKind.AGENT
-      : SpanKind.CHAIN;
+  const spanProducer = getSpanProducingObject(run);
+  if (
+    '_agentActionType' in spanProducer &&
+    spanProducer._agentActionType() === 'single'
+  ) {
+    baseSpan.span_kind = SpanKind.AGENT;
+  } else {
+    baseSpan.span_kind = SpanKind.CHAIN;
+  }
 
   return baseSpan;
 }
 
-export function convertToolRunToWbSpan(run: any): any {
+export function convertToolRunToWbSpan(run: ToolRun): any {
   const baseSpan = convertRunToWbSpan(run);
 
   baseSpan.attributes.action = run.action;
   baseSpan.results = [
     {inputs: {input: run.tool_input}, outputs: {output: run.output}},
   ];
-  baseSpan.child_spans = run.child_runs.map((child_run: any) =>
-    convertLcRunToWbSpan(child_run)
+  const childRuns: BaseRun[] = [
+    ...run.child_llm_runs,
+    ...run.child_chain_runs,
+    ...run.child_tool_runs,
+  ];
+  baseSpan.child_spans = childRuns.map((childRun: BaseRun) =>
+    convertLcRunToWbSpan(childRun)
   );
   baseSpan.span_kind = SpanKind.TOOL;
 
   return baseSpan;
 }
 
-export function convertRunToWbSpan(run: any): any {
-  const attributes = run.extra ? {...run.extra} : {};
+export function convertRunToWbSpan(run: BaseRun): any {
+  const attributes: any = {}; // 'extra' in run ? {...run.extra} : {};
   attributes.execution_order = run.execution_order;
 
   return {
@@ -90,15 +113,17 @@ export function convertRunToWbSpan(run: any): any {
   };
 }
 
-export function safeMaybeModelDict(model: any): any | null {
+export function safeMaybeModelDict(model: MaybeModels): any | null {
   let data = null;
   try {
-    data = model.dict();
+    // @ts-expect-error: YOLO
+    data = model.serialize();
   } catch (e) {}
 
-  if (data == null && model.hasOwnProperty('agent')) {
+  if (data == null && 'agent' in model) {
     try {
-      data = model.agent.dict();
+      // @ts-expect-error: YOLO
+      data = model.agent.serialize();
     } catch (e) {}
   }
 
@@ -119,11 +144,12 @@ function replaceTypeWithKind(data: any): any {
     return Object.fromEntries(
       Object.entries(data).map(([k, v]) => [k, replaceTypeWithKind(v)])
     );
-  } if (Array.isArray(data)) {
+  }
+  if (Array.isArray(data)) {
     return data.map(v => replaceTypeWithKind(v));
-  } if (data instanceof Set) {
+  }
+  if (data instanceof Set) {
     return new Set(Array.from(data).map(v => replaceTypeWithKind(v)));
-  } 
-    return data;
-  
+  }
+  return data;
 }

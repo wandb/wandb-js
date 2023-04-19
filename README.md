@@ -72,7 +72,7 @@ This is a TypeScript library compatible with Node and modern Web Browsers.  It's
 ```typescript
 import wandb from '@wandb/sdk'
 
-wandb.init({config: {test: 1}});
+await wandb.init({config: {test: 1}});
 wandb.log({acc: 0.9, loss: 0.1});
 wandb.log({acc: 0.91, loss: 0.09});
 await wandb.finish();

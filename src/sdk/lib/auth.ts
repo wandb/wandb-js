@@ -1,4 +1,5 @@
 import {isNode} from './util.js';
+import {config} from './config.js';
 
 export class Auth {
   key?: string;
@@ -6,22 +7,21 @@ export class Auth {
   timeout?: number;
 
   constructor(key?: string, timeout?: number) {
-    this.key = key || process.env.WANDB_API_KEY;
+    this.key = key || config().API_KEY;
     this.timeout = timeout;
   }
 
-  async ensureKey(
-    host?: string,
-    relogin = false
-  ): Promise<string | undefined> {
+  async ensureKey(host?: string, relogin = false): Promise<string | undefined> {
     if (this.key && !relogin) {
       return this.key;
     }
     if (host == null) {
+      // eslint-disable-next-line no-param-reassign
       host = 'https://api.wandb.ai';
     }
     if (isNode()) {
-      const NetRC = require('./netrc').default;
+      // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require
+      const NetRC = (await import('./netrc.js')).default;
       const netrc = new NetRC();
       if (relogin) {
         this.key = await this.promptKey(host);
@@ -52,15 +52,16 @@ export class Auth {
   }
 
   private cleanHost(host: string) {
-    return host.replace(/https?:\/\//, '').replace(/[\/ ]+$/, '');
+    return host.replace(/https?:\/\//, '').replace(/[/ ]+$/, '');
   }
 
   private appHost(host: string) {
-    return process.env.WANDB_APP_URL || host.replace(/api\.wandb/, 'wandb');
+    return config().APP_URL || host.replace(/api\.wandb/, 'wandb');
   }
 
   private validateKey(key: string) {
     const parts = key.split('-');
+    // eslint-disable-next-line no-param-reassign
     key = parts[parts.length - 1];
     if (key.length !== 40) {
       return false;
@@ -75,7 +76,7 @@ export class Auth {
           'Cannot prompt for API key, set the WANDB_API_KEY environment variable'
         );
       }
-      const readline = require('readline');
+      const readline = await import('readline');
       const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
@@ -101,29 +102,32 @@ export class Auth {
             resolve(key);
           }
         );
-        rl._writeToOutput = function () {
+        // TODO: probably want to test this...
+        // @ts-expect-error: YOLO
+        rl._writeToOutput = () => {
+          // @ts-expect-error: YOLO
           rl.output.write('*');
         };
       });
-    } 
-      return new Promise((resolve, reject) => {
-        let timeout: NodeJS.Timeout | null = null;
-        if (this.timeout) {
-          timeout = setTimeout(() => {
-            reject(new Error('Timed out waiting for API key'));
-          }, this.timeout);
-        }
-        const key = prompt(
-          `Copy your API key from ${this.appHost(host)}/authorize: `
-        );
-        if (!this.validateKey(key || '')) {
-          reject(new Error('Invalid API key, should be 40 characters'));
-        }
-        if (timeout != null) {
-          clearTimeout(timeout);
-        }
-        resolve(key || undefined);
-      });
-    
+    }
+    return new Promise((resolve, reject) => {
+      let timeout: NodeJS.Timeout | null = null;
+      if (this.timeout) {
+        timeout = setTimeout(() => {
+          reject(new Error('Timed out waiting for API key'));
+        }, this.timeout);
+      }
+      // eslint-disable-next-line no-alert
+      const key = prompt(
+        `Copy your API key from ${this.appHost(host)}/authorize: `
+      );
+      if (!this.validateKey(key || '')) {
+        reject(new Error('Invalid API key, should be 40 characters'));
+      }
+      if (timeout != null) {
+        clearTimeout(timeout);
+      }
+      resolve(key || undefined);
+    });
   }
 }

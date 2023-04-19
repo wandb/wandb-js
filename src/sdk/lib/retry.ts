@@ -31,14 +31,16 @@ export class Delay {
   }
 }
 
-export async function requestWithRetry(
+export const requestWithRetry = async function (
   requestPromise: Promise<any>,
   {maxAttempts = 3, maxDelayMs = 15_000, retriesDelay = 1_000} = {},
   retriesCount = 0
 ): Promise<any> {
   // TODO: wire up settings.silent?
+  /* eslint-disable no-param-reassign */
   try {
     return await requestPromise;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     if (e.response && e.response.status) {
       if (e.response.status <= 404) {
@@ -46,7 +48,7 @@ export async function requestWithRetry(
         return null;
       }
     } else {
-      console.error('Fatal Uknown error: ', e);
+      console.error('Fatal error: ', e);
       return null;
     }
     retriesCount += 1;
@@ -66,4 +68,4 @@ export async function requestWithRetry(
       retriesCount
     );
   }
-}
+};

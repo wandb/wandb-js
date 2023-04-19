@@ -14,6 +14,7 @@ module.exports = {
   plugins: ["@typescript-eslint", "tree-shaking", "no-instanceof"],
   ignorePatterns: [
     ".eslintrc.cjs",
+    "src/gql/fragment-masking.ts",
     "scripts",
     "node_modules",
     "dist",

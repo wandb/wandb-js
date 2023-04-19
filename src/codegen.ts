@@ -4,6 +4,7 @@ import {CodegenConfig} from '@graphql-codegen/cli';
 const config: CodegenConfig = {
   schema: 'https://api.wandb.ai/graphql',
   documents: ['src/**/*.ts'],
+  emitLegacyCommonJSImports: false,
   generates: {
     './src/gql/': {
       preset: 'client',

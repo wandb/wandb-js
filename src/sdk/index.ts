@@ -1,24 +1,45 @@
-import {Run} from './wandb_run.js';
+import type {Run} from './wandb_run.js';
+import {init} from './wandb_init.js';
+import {login} from './wandb_login.js';
 
-export {init} from './wandb_init.js';
-export {login} from './wandb_login.js';
-export {Run} from './wandb_run.js';
-export * as integrations from './integrations/index.js';
+export interface SDK {
+  init: typeof init;
+  login: typeof login;
+  log: typeof log;
+  finish: typeof finish;
+  runPromise: Promise<Run> | null;
+}
 
-export var runPromise: Promise<Run> | null = null;
+const sdk: SDK = {
+  init,
+  login,
+  log,
+  finish,
+  runPromise: null,
+};
 
-export async function log(data: object, step?: number, commit?: boolean) {
-  if (runPromise == null) {
+function log(
+  data: Record<string, unknown>,
+  step?: number,
+  commit?: boolean
+): void {
+  if (sdk.runPromise == null) {
     throw new Error('Cannot log before calling wandb.init()');
   }
   // TODO: handle errors
-  runPromise.then(run => run.log(data, step, commit));
+  sdk.runPromise
+    .then(run => run.log(data, step, commit))
+    .catch(e => {
+      console.error(e);
+    });
 }
 
-export async function finish(code?: number) {
-  if (runPromise == null) {
+async function finish(code?: number) {
+  if (sdk.runPromise == null) {
     throw new Error('Cannot finish before calling wandb.init()');
   }
-  const run = await runPromise;
+  const run = await sdk.runPromise;
   await run.finish(code);
 }
+
+export default sdk;

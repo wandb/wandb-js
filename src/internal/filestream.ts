@@ -29,7 +29,7 @@ interface FsFilesData {
 
 interface LastChunk {
   offset: number;
-  data: any;
+  data: Record<string, unknown>;
 }
 
 export class FileStream {
@@ -84,7 +84,11 @@ export class FileStream {
   }
 
   // TODO: rethink this
-  public logHistory(data: any, step?: number, commit?: boolean) {
+  public logHistory(
+    data: Record<string, unknown>,
+    step?: number,
+    commit?: boolean
+  ) {
     const sc = this.lastChunks['wandb-summary.json'];
     const hc = this.lastChunks['wandb-history.jsonl'];
     if (Object.keys(data).length === 0 && Object.keys(hc.data).length === 0) {
@@ -92,6 +96,7 @@ export class FileStream {
       return;
     }
     // Add timestamps
+    /* eslint-disable no-param-reassign */
     data._runtime = this.runtimeSeconds();
     data._timestamp = Date.now() / 1000;
     hc.data = {...hc.data, ...data};
@@ -169,11 +174,11 @@ export class FileStream {
     const elapsed = this.runtimeSeconds();
     if (elapsed < 30) {
       return 2_000;
-    } if (elapsed < 30 * 5) {
+    }
+    if (elapsed < 30 * 5) {
       return 10_000;
-    } 
-      return 30_000;
-    
+    }
+    return 30_000;
   }
 
   private async send(fsdata: FsFilesData | FsFinishedData) {
@@ -185,7 +190,7 @@ export class FileStream {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Basic ${Buffer.from(
-            `api:${  this.settings.apiKey}`
+            `api:${this.settings.apiKey}`
           ).toString('base64')}`,
         },
       }),
@@ -200,6 +205,7 @@ export class FileStream {
   }
 
   private async _thread_body() {
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       if (this.shutdown) {
         debugLog('Exiting filestream loop via shutdown');

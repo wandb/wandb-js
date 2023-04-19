@@ -1,8 +1,25 @@
-import {Worker, MessageChannel, MessagePort} from 'worker_threads';
+import type {MessagePort, Worker} from 'node:worker_threads';
+import {config} from '../lib/config.js';
 import {Sender} from '../../internal/sender.js';
 import {Settings} from '../settings.js';
 import {generateId} from '../lib/runid.js';
 import {InitOptions} from '../wandb_init.js';
+
+/* eslint-disable tree-shaking/no-side-effects-in-initialization */
+let AsyncMessageChannel: any;
+let AsyncWorker: any;
+async function init() {
+  if (typeof window === 'undefined') {
+    const ws = await import('node:worker_threads');
+    AsyncMessageChannel = ws.MessageChannel;
+    AsyncWorker = ws.Worker;
+  } else {
+    AsyncMessageChannel = window.MessageChannel;
+  }
+}
+init().catch(e => {
+  console.error('Error initializing MessageChannel', e);
+});
 
 export interface InitRecord {
   type: 'init';
@@ -68,21 +85,21 @@ export function initRunPayload({
   id,
   config,
 }: InitOptions): InitRecord['payload'] {
-  if (id == null) {
-    id = generateId();
+  let safeId: string = id || '';
+  let safeProject: string = project || '';
+  const safeEntity: string = entity || '';
+  if (safeId === '') {
+    safeId = generateId();
   }
-  if (project == null) {
-    project = 'uncategorized';
-  }
-  if (entity == null) {
-    entity = '';
+  if (safeProject === '') {
+    safeProject = 'uncategorized';
   }
   // NOTE: We make id name, and name displayName to play nice with graphql
   // TODO: figure out where to add _wandb and telemetry to config / handle updates
   return {
-    name: id,
-    project,
-    entity,
+    name: safeId,
+    project: safeProject,
+    entity: safeEntity,
     displayName: name,
     config: JSON.stringify(config),
   };
@@ -96,12 +113,13 @@ export class Messenger {
   sender?: Sender;
 
   constructor(settings: Settings) {
-    const channel = new MessageChannel();
-    if (process.env.WANDB_WORKER === 'true') {
+    // TODO: figure out how to import MessageChannel only in node
+    const channel = new AsyncMessageChannel();
+    if (config().ENABLE_WORKER) {
       // TODO: decide if this is a good idea / support browser workers
-      const worker = new Worker(require.resolve('../../internal/main'), {
+      const worker = new AsyncWorker(require.resolve('../../internal/main'), {
         execArgv:
-          process.env.WANDB_ENV === 'development'
+          config().ENV === 'development'
             ? ['-r', 'ts-node/register/transpile-only']
             : undefined,
         workerData: settings,
@@ -141,14 +159,16 @@ export class Messenger {
     if (this.exiting != null) {
       return this.exiting;
     }
-    this.exiting = new Promise(async resolve => {
-      if (this.port instanceof Worker) {
-        this.port.terminate();
+    this.exiting = new Promise((resolve, reject) => {
+      if ('terminate' in this.port) {
+        (this.port as Worker)
+          .terminate()
+          .then(() => resolve())
+          .catch(reject);
       } else {
         this.port.close();
-        await this.sender?.stop();
+        this.sender?.stop().then(resolve, reject);
       }
-      resolve();
     });
     return this.exiting;
   }

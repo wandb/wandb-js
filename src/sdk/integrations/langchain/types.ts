@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 import {ChainValues, LLMResult} from 'langchain/schema';
 import {BaseCallbackHandler} from 'langchain/callbacks';
 
@@ -21,12 +22,13 @@ export interface TracerSession extends BaseTracerSession {
   id: number;
 }
 
+// TODO: get _self in here
 export interface BaseRun {
   id?: number;
   start_time: number;
   end_time: number;
   execution_order: number;
-  serialized: {name: string};
+  serialized: {name: string; _self?: any};
   session_id: number;
   error?: string;
   type: RunType;

@@ -7,12 +7,16 @@
   "type": "module",
   "description": "SDK for logging data to Weights & Biases",
   "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
-    "generate": "graphql-codegen --config codegen.ts",
+    "generate": "graphql-codegen --config src/codegen.ts",
     "lint": "eslint . --ext .ts",
-    "build": "rimraf ./build && tsc",
-    "dev": "WANDB_ENV=development ts-node",
-    "test": "WANDB_ENV=development jest --detectOpenHandles"
+    "build": "npm run build:esm && npm run build:cjs && node scripts/create-entrypoint.js",
+    "build:esm": "rimraf ./dist && tsc --outDir dist/",
+    "build:cjs": "tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rm -r dist-cjs",
+    "dev": "WANDB_ENV=development ts-node-esm",
+    "test": "NODE_OPTIONS=\"--experimental-vm-modules\" WANDB_ENV=test jest --detectOpenHandles",
+    "test:reset": "jest --clearCache"
   },
   "keywords": [],
   "author": "Chris Van Pelt <vanpelt@wandb.com>",
@@ -33,13 +37,44 @@
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-tree-shaking": "^1.10.0",
     "jest": "^29.5.0",
-    "langchain": "^0.0.56",
+    "release-it": "^15.10.1",
     "rimraf": "^4.4.1",
     "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.1",
     "typescript": "^5.0.3"
+  },
+  "peerDependencies": {
+    "langchain": "^0.0.57"
+  },
+  "peerDependenciesMeta": {
+    "langchain": {
+      "optional": true
+    }
   },
   "dependencies": {
     "cross-fetch": "^3.1.5",
     "graphql-request": "^5.2.0"
-  }
+  },
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.cjs"
+    },
+    "./integrations/langchain": {
+      "types": "./integrations/langchain.d.ts",
+      "import": "./integrations/langchain.js",
+      "require": "./integrations/langchain.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist/",
+    "integrations/langchain.cjs",
+    "integrations/langchain.js",
+    "integrations/langchain.d.ts",
+    "index.cjs",
+    "index.js",
+    "index.d.ts"
+  ]
 }

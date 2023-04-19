@@ -1,14 +1,19 @@
+import {config} from './lib/config.js';
+
 export interface Settings {
-  apiKey: string;
+  apiKey?: string;
   baseUrl: string;
-  offline: boolean;
+  offline?: boolean;
   silent?: boolean;
 }
 
-export const defaultSettings = {
-  apiKey: process.env.WANDB_API_KEY || '',
-  baseUrl: process.env.WANDB_BASE_URL || 'https://api.wandb.ai',
-  offline: process.env.WANDB_MODE === 'offline',
-};
+export const defaultSettings = () => ({
+  apiKey: config().API_KEY || '',
+  baseUrl: config().API_URL || 'https://api.wandb.ai',
+  offline: config().MODE === 'offline',
+});
 
-export const settingsWithOverrides = (overrides?: Partial<Settings>) => ({ ...defaultSettings, ...overrides});
+export const settingsWithOverrides = (overrides?: Partial<Settings>) => ({
+  ...defaultSettings(),
+  ...overrides,
+});

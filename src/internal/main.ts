@@ -1,4 +1,4 @@
-import {parentPort, workerData} from 'worker_threads';
+import {parentPort, workerData} from 'node:worker_threads';
 import {Sender} from '../internal/sender.js';
 import {InitOptions} from '../sdk/wandb_init.js';
 import {defaultSettings} from '../sdk/settings.js';
@@ -7,7 +7,7 @@ import {initRunPayload} from '../sdk/interface/messenger.js';
 
 export function main() {
   const opts: InitOptions = workerData;
-  const settings = defaultSettings;
+  const settings = defaultSettings();
   if (opts.settings) {
     Object.assign(settings, opts.settings);
   }
@@ -18,7 +18,7 @@ export function main() {
     debugLog('beforeExit worker');
     sender._shutdown = true;
   });
-  sender._thread_body();
+  return sender._thread_body();
 }
 // TODO: we used this when we had workers, now we've simplified it
 // main();

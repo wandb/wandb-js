@@ -26,11 +26,7 @@ export abstract class Media extends WBValue {
     this._caption = caption;
   }
 
-  protected _setFile(
-    path: string,
-    isTmp = false,
-    extension?: string
-  ): void {
+  protected _setFile(path: string, extension?: string, isTmp = false): void {
     this._path = path;
     this._isTmp = isTmp;
     this._extension = extension;
@@ -45,9 +41,8 @@ export abstract class Media extends WBValue {
   static captions(mediaItems: Media[]): boolean | Array<string | undefined> {
     if (mediaItems[0]._caption !== undefined) {
       return mediaItems.map(m => m._caption);
-    } 
-      return false;
-    
+    }
+    return false;
   }
 
   isBound(): boolean {
@@ -67,17 +62,19 @@ export abstract class Media extends WBValue {
     throw new Error('NotImplementedError');
   }
 
-  toJSON(_?: Run): any {
+  toJSON(_?: Run): Record<string, unknown> {
     throw new Error('NotImplementedError');
   }
 
-  static fromJSON(_: any, __: any): Media {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static fromJSON(_: Record<string, unknown>, __: any): Media {
     throw new Error('NotImplementedError');
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   isEqual(other: any): boolean {
     return (
-      this.constructor.name === this.constructor.name &&
+      this.constructor.name === other.constructor.name &&
       this._sha256 != null &&
       other._sha256 === this._sha256
     );

@@ -1,3 +1,5 @@
+import {config} from './config.js';
+
 export function isNode(): boolean {
   return (
     typeof process !== 'undefined' &&
@@ -6,8 +8,9 @@ export function isNode(): boolean {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function debugLog(...args: any[]) {
-  if (process.env.WANDB_DEBUG === 'true') {
+  if (config().DEBUG) {
     console.log(...args);
   }
 }

@@ -3,10 +3,9 @@
   "compilerOptions": {
     "outDir": "../dist",
     "rootDir": "./src",
-    "target": "ES2021",
+    "target": "ES2022",
     "lib": [
-      "ES2021",
-      "ES2022.Object",
+      "ES2022",
       "DOM"
     ],
     "module": "ES2020",
@@ -25,12 +24,16 @@
     "strict": true
   },
   "include": [
-    "src/**/*",
-    "codegen.ts"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",
     "dist",
     "docs"
-  ]
+  ],
+  "typedocOptions": {
+    "entryPoints": [
+      "src/sdk/integrations/langchain/index.ts"
+    ]
+  }
 }

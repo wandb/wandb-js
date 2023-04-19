@@ -1,10 +1,11 @@
-import * as crypto from 'crypto';
 import {Media} from './media.js';
 import {Run} from '../wandb_run.js';
 
+/* TODO: figure out how to do in browser too
 function hashId(s: string): string {
   return crypto.createHash('md5').update(s, 'utf8').digest('hex').slice(0, 16);
 }
+*/
 
 interface Result {
   inputs: Record<string, unknown> | null;
@@ -64,7 +65,7 @@ export class WBTraceTree extends Media {
     // the complex data structures create problems for gorilla history to parquet.
     if (this._model_dict != null) {
       const model_dump_str = JSON.stringify(this._model_dict);
-      res.model_hash = hashId(model_dump_str);
+      // res.model_hash = hashId(model_dump_str);
       res.model_dict_dumps = model_dump_str;
     }
     res.root_span_dumps = JSON.stringify(this._root_span);
@@ -77,6 +78,7 @@ export class WBTraceTree extends Media {
 }
 
 export function addAttribute(span: Span, key: string, value: unknown): void {
+  /* eslint-disable no-param-reassign */
   if (span.attributes === null) {
     span.attributes = {};
   }

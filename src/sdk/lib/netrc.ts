@@ -1,6 +1,17 @@
-import * as fs from 'fs';
-import * as os from 'os';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import {config} from './config.js';
+
+class Machine {
+  machine = 'empty';
+
+  login?: string;
+
+  password?: string;
+
+  account?: string;
+}
 
 export default class NetRC {
   filename: string;
@@ -15,12 +26,7 @@ export default class NetRC {
 
   private get defaultFile(): string {
     const home =
-      (os.platform() === 'win32' &&
-        (process.env.HOME ||
-          (process.env.HOMEDRIVE &&
-            process.env.HOMEPATH &&
-            path.join(process.env.HOMEDRIVE!, process.env.HOMEPATH!)) ||
-          process.env.USERPROFILE)) ||
+      (os.platform() === 'win32' && config().WIN_HOME) ||
       os.homedir() ||
       os.tmpdir();
     return path.join(home, os.platform() === 'win32' ? '_netrc' : '.netrc');
@@ -48,22 +54,22 @@ export default class NetRC {
 
   host(hostname: string) {
     if (!this.machines[hostname])
-      this.error(`Machine ${  hostname  } not found in ${  this.filename}`);
+      this.error(`Machine ${hostname} not found in ${this.filename}`);
     return this.machines[hostname];
   }
 
   parse() {
     if (!fs.existsSync(this.filename))
-      this.error(`File does not exist: ${  this.filename}`);
+      this.error(`File does not exist: ${this.filename}`);
     this.machines = {};
     let data = fs.readFileSync(this.filename, 'utf-8');
 
     // Remove comments
     const lines = data.split('\n');
-    for (const n in lines) {
-      const i = lines[n].indexOf('#');
-      if (i > -1) lines[n] = lines[n].substring(0, i);
-    }
+    lines.forEach((line, idx) => {
+      const i = line.indexOf('#');
+      if (i > -1) lines[idx] = line.substring(0, i);
+    });
     data = lines.join('\n');
 
     const tokens = data.split(/[ \t\n\r]+/);
@@ -84,27 +90,18 @@ export default class NetRC {
   // Allow spaces and other weird characters in passwords by supporting \xHH
   unescape(s: string) {
     const match = /\\x([0-9a-fA-F]{2})/.exec(s);
+    let escaped = s;
     if (match) {
-      s =
+      escaped =
         s.substring(0, match.index) +
         String.fromCharCode(parseInt(match[1], 16)) +
         s.substring(match.index + 4);
     }
-    return s;
+    return escaped;
   }
 
   error(message: string) {
     console.error('netrc: Error:', message);
-    throw new Error(`netrc: Error: ${  message}`);
+    throw new Error(`netrc: Error: ${message}`);
   }
-}
-
-class Machine {
-  machine = 'empty';
-
-  login?: string;
-
-  password?: string;
-
-  account?: string;
 }

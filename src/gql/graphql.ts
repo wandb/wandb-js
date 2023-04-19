@@ -312,6 +312,7 @@ export type Artifact = {
   storageBytes: Scalars['Int64'];
   updatedAt?: Maybe<Scalars['DateTime']>;
   usedBy: RunConnection;
+  usedByApprox: RunConnection;
   usedCount: Scalars['Int'];
   versionIndex?: Maybe<Scalars['Int']>;
 };
@@ -352,6 +353,14 @@ export type ArtifactUsedByArgs = {
   first?: InputMaybe<Scalars['Int']>;
   last?: InputMaybe<Scalars['Int']>;
   order?: InputMaybe<Scalars['String']>;
+};
+
+export type ArtifactUsedByApproxArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  order?: InputMaybe<ArtifactUsedByApproxOrdering>;
 };
 
 export type ArtifactVersionIndexArgs = {
@@ -1021,6 +1030,15 @@ export type ArtifactTypeStorageNode = StorageTreeNode & {
   name: Scalars['String'];
   size: Scalars['Int64'];
 };
+
+export type ArtifactUsedByApproxOrdering = {
+  direction: OrderDir;
+  key: ArtifactUsedByApproxOrderingKey;
+};
+
+export enum ArtifactUsedByApproxOrderingKey {
+  CreatedAt = 'CREATED_AT',
+}
 
 export type AttachCustomerPaymentMethodInput = {
   clientMutationId?: InputMaybe<Scalars['String']>;
@@ -2885,6 +2903,12 @@ export type InsertGalleryDiscussionPayload = {
   success: Scalars['Boolean'];
 };
 
+export type IntRange = {
+  __typename?: 'IntRange';
+  max?: Maybe<Scalars['Int']>;
+  min?: Maybe<Scalars['Int']>;
+};
+
 export type Integration = {
   id: Scalars['ID'];
 };
@@ -4057,6 +4081,11 @@ export enum ObservationalUnit {
   Organization = 'ORGANIZATION',
   Team = 'TEAM',
   User = 'USER',
+}
+
+export enum OrderDir {
+  Asc = 'ASC',
+  Desc = 'DESC',
 }
 
 export enum OrgType {
@@ -5305,6 +5334,7 @@ export type RunConnection = {
   pageInfo: PageInfo;
   paths?: Maybe<Scalars['JSONString']>;
   totalCount: Scalars['Int'];
+  totalCountApprox: IntRange;
 };
 
 export type RunConnectionDeltaArgs = {
