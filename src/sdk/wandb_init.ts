@@ -37,6 +37,7 @@ export async function init(opts: InitOptions = {}): Promise<Run> {
         login({
           key: settings.apiKey,
           host: settings.baseUrl,
+          timeout: 10_000,
         })
           .then(key => {
             settings.apiKey = key;

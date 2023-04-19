@@ -117,6 +117,7 @@ export class Auth {
           reject(new Error('Timed out waiting for API key'));
         }, this.timeout);
       }
+      // TODO: this is not a good idea
       // eslint-disable-next-line no-alert
       const key = prompt(
         `Copy your API key from ${this.appHost(host)}/authorize: `
