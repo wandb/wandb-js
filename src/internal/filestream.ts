@@ -3,6 +3,7 @@ import {Queue} from './queue.js';
 import {Settings} from '../sdk/settings.js';
 import {Delay, requestWithRetry} from '../sdk/lib/retry.js';
 import {debugLog} from '../sdk/lib/util.js';
+import {config} from '../sdk/lib/config.js';
 import {InitRecord} from '../sdk/interface/messenger.js';
 
 interface FsFinishedData {
@@ -188,6 +189,7 @@ export class FileStream {
         method: 'POST',
         body: JSON.stringify(fsdata),
         headers: {
+          'User-Agent': `W&B Internal JS Client ${config().VERSION}`,
           'Content-Type': 'application/json',
           Authorization: `Basic ${Buffer.from(
             `api:${this.settings.apiKey}`

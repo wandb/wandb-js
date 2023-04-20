@@ -1,4 +1,5 @@
 import {test, expect} from '@jest/globals';
+import {runStack} from './wandb_init.js';
 import wandb from '../index.js';
 
 test('Test simple log case', async () => {
@@ -8,4 +9,5 @@ test('Test simple log case', async () => {
   await wandb.finish();
   // TODO: better assertions
   expect(wandb.runPromise).toEqual(null);
+  expect(runStack.size).toEqual(0);
 });

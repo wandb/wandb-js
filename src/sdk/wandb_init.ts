@@ -52,7 +52,10 @@ export async function init(opts: InitOptions = {}): Promise<Run> {
         // eslint-disable-next-line no-param-reassign
         opts.settings = settings;
 
-        const messenger = new Messenger(settings, resolve);
+        const messenger = new Messenger(settings, run => {
+          runStack.add(run);
+          resolve(run);
+        });
 
         function exitHandler(signal: string): Promise<void> {
           // TODO: messenger may not be ready yet, move this into finish

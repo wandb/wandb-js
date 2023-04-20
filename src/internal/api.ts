@@ -11,6 +11,7 @@ import {
   TypedDocumentString,
 } from '../gql/graphql.js';
 import {debugLog} from '../sdk/lib/util.js';
+import {config} from '../sdk/lib/config.js';
 import {requestWithRetry} from '../sdk/lib/retry.js';
 
 const UpsertBucketMutationDocument = graphql(/* GraphQL */ `
@@ -135,6 +136,7 @@ export class InternalApi {
   createClient(host: string, key?: string) {
     return new GraphQLClient(`${host}/graphql`, {
       headers: {
+        'User-Agent': `W&B Internal JS Client ${config().VERSION}`,
         authorization: key
           ? `Basic ${Buffer.from(`api:${key}`).toString('base64')}`
           : '',

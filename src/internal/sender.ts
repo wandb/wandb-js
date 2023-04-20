@@ -54,6 +54,7 @@ export class Sender {
   }
 
   async start() {
+    // TODO: wait on the setup thread
     this._shutdown = false;
     // TODO: this could go to a better place
     await this.api.ensureDefaultEntity();

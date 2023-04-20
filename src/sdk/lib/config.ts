@@ -1,6 +1,8 @@
-/* eslint-disable no-process-env */
+import {version} from './version.js';
 
+/* eslint-disable no-process-env */
 export const config = () => ({
+  VERSION: version,
   DEBUG: readEnv('WANDB_DEBUG') === 'true',
   ENV: readEnv('WANDB_ENV', 'production'),
   ENABLE_WORKER: readEnv('WANDB_WORKER') === 'true',

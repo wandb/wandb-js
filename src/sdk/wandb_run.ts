@@ -1,5 +1,6 @@
 import {Messenger} from './interface/messenger.js';
 import {Settings} from './settings.js';
+import {runStack} from './wandb_init.js';
 import wandb from '../index.js';
 
 export class Run {
@@ -52,6 +53,7 @@ export class Run {
       console.log(`View run at ${this.url()}`);
     }
     await this._messenger.terminate();
+    runStack.delete(this);
     wandb.runPromise = null;
   }
 
