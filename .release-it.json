@@ -3,8 +3,5 @@
     "release": true,
     "autoGenerate": true,
     "tokenRef": "GITHUB_TOKEN_RELEASE"
-  },
-  "npm": {
-    "publish": false
   }
 }
