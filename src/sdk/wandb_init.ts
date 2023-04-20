@@ -1,9 +1,5 @@
 import {Run} from './wandb_run.js';
-import {
-  Messenger,
-  ReceiverRecord,
-  initRunPayload,
-} from './interface/messenger.js';
+import {Messenger, initRunPayload} from './interface/messenger.js';
 import {Settings, settingsWithOverrides} from './settings.js';
 import wandb from '../index.js';
 import {debugLog} from './lib/util.js';
@@ -53,8 +49,10 @@ export async function init(opts: InitOptions = {}): Promise<Run> {
         // eslint-disable-next-line no-param-reassign
         opts.settings = settings;
 
-        const messenger = new Messenger(settings);
+        const messenger = new Messenger(settings, resolve);
+
         function exitHandler(signal: string): Promise<void> {
+          // TODO: messenger may not be ready yet, move this into finish
           messenger.port.postMessage({
             type: 'finish',
             payload: {code: 0, signal},
@@ -75,33 +73,6 @@ export async function init(opts: InitOptions = {}): Promise<Run> {
           }, reject);
         });
 
-        // TODO: maybe move this logic into messenger?
-        messenger.port.on('message', (msg: ReceiverRecord) => {
-          if (msg.type === 'run') {
-            debugLog('wandb.init finished');
-            const run = new Run(
-              msg.payload.project,
-              msg.payload.entity,
-              msg.payload.name,
-              messenger,
-              settings,
-              msg.payload.displayName || opts.name
-            );
-            runStack.add(run);
-            resolve(run);
-          } else if (msg.type === 'error') {
-            reject(msg.payload);
-          } else {
-            // TODO: other stuff
-          }
-        });
-        // TODO: shutdown here as well?
-        messenger.port.on('error', reject);
-        messenger.port.on('exit', code => {
-          if (code !== 0) {
-            reject(new Error(`Worker stopped with exit code ${code}`));
-          }
-        });
         messenger.init(initRunPayload(opts)).catch(e => {
           messenger.terminate().then(() => reject(e), reject);
         });

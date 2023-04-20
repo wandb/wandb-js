@@ -7,18 +7,6 @@ import {Settings} from '../sdk/settings.js';
 import {debugLog} from '../sdk/lib/util.js';
 import {SenderRecord} from '../sdk/interface/messenger.js';
 
-/* eslint-disable tree-shaking/no-side-effects-in-initialization */
-let asyncParentPort: any;
-async function init() {
-  if (typeof window === 'undefined') {
-    const ws = await import('node:worker_threads');
-    asyncParentPort = ws.parentPort;
-  }
-}
-init().catch(e => {
-  console.error('Error initializing MessageChannel', e);
-});
-
 export class Sender {
   queue: Queue<SenderRecord>;
 
@@ -39,11 +27,21 @@ export class Sender {
   constructor(settings: Settings, port?: MessagePort) {
     this.queue = new Queue();
     this.delay = new Delay(1000);
-    this.port = port || asyncParentPort;
     this.api = new InternalApi(settings.baseUrl, settings.apiKey);
     this.filestream = new FileStream(settings);
     this._shutdown = false;
+    this.setupPort(port).catch(e => {
+      throw e;
+    });
+  }
 
+  async setupPort(port?: MessagePort): Promise<void> {
+    let asyncParentPort: MessagePort | null = null;
+    if (port == null && typeof window === 'undefined') {
+      const ws = await import('node:worker_threads');
+      asyncParentPort = ws.parentPort;
+    }
+    this.port = port || asyncParentPort;
     this.port?.on('message', (msg: SenderRecord) => {
       debugLog('sender queued', msg);
       this.queue.enqueue(msg);
