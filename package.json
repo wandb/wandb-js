@@ -8,6 +8,10 @@
   "description": "SDK for logging data to Weights & Biases",
   "main": "index.js",
   "types": "index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:wandb/wandb-js.git"
+  },
   "scripts": {
     "generate": "graphql-codegen --config src/codegen.ts",
     "lint": "eslint . --ext .ts",

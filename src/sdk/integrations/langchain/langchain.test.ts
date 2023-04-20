@@ -28,10 +28,10 @@ export const run = async (mode = 'math') => {
 };
 
 test('Test basic LangChain integration', async () => {
-  await WandbTracer.watchAll({project: 'langchain-test'});
+  await WandbTracer.init({project: 'langchain-test'});
   expect(wandb.runPromise).not.toEqual(null);
   const res = await run();
-  await WandbTracer.stopWatch();
+  await WandbTracer.finish();
   // TODO: better assertions
   expect(wandb.runPromise).toEqual(null);
   expect(res.output).toContain('2641.3333');

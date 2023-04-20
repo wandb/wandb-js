@@ -59,9 +59,11 @@ export default class NetRC {
   }
 
   parse() {
-    if (!fs.existsSync(this.filename))
-      this.error(`File does not exist: ${this.filename}`);
     this.machines = {};
+    if (!fs.existsSync(this.filename)) {
+      return;
+    }
+
     let data = fs.readFileSync(this.filename, 'utf-8');
 
     // Remove comments

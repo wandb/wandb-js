@@ -41,14 +41,14 @@ export class WandbTracer extends BaseTracer {
     return patchCallbacks(obj);
   }
 
-  static async watchAll(
+  static async init(
     runArgs: InitOptions | null = null,
     includeStdout = true,
     additionalHandlers: any[] = []
   ): Promise<Run | null> {
     // ensurePatched();
     const tracer = new WandbTracer();
-    await tracer.init(runArgs);
+    await tracer.initRun(runArgs);
     await tracer.loadSession('');
     const manager = getCallbackManager();
     const handlers: any[] = [tracer];
@@ -59,7 +59,7 @@ export class WandbTracer extends BaseTracer {
     return WandbTracer._run;
   }
 
-  static async stopWatch() {
+  static async finish() {
     // clearPatches();
     if (WandbTracer._instance) {
       await WandbTracer._instance.finish();
@@ -75,7 +75,7 @@ export class WandbTracer extends BaseTracer {
     return 'https://wandb.ai';
   }
 
-  async init(runArgs: InitOptions | null = null): Promise<Run | null> {
+  async initRun(runArgs: InitOptions | null = null): Promise<Run | null> {
     if (
       WandbTracer._run != null &&
       JSON.stringify(WandbTracer._runArgs) === JSON.stringify(runArgs)
