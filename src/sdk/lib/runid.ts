@@ -1,7 +1,8 @@
-/* eslint-disable tree-shaking/no-side-effects-in-initialization */
-let randomBytes: any;
+async function generateId(length = 8): Promise<string> {
+  const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
 
-async function init() {
+  let randomBytes: any;
   if (typeof window === 'undefined') {
     randomBytes = (await import('node:crypto')).randomBytes;
   } else {
@@ -11,14 +12,6 @@ async function init() {
       return bytes;
     };
   }
-}
-init().catch(e => {
-  console.error('Error initializing Crypto', e);
-});
-
-export const generateId = function (length = 8): string {
-  const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
 
   // There are ~2.8T base-36 8-digit strings. If we generate 210k ids,
   // we'll have a ~1% chance of collision.
@@ -28,4 +21,6 @@ export const generateId = function (length = 8): string {
   }
 
   return result;
-};
+}
+
+export {generateId};

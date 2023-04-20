@@ -2,7 +2,6 @@ import type {MessageChannel, MessagePort, Worker} from 'node:worker_threads';
 import {config} from '../lib/config.js';
 import {Sender} from '../../internal/sender.js';
 import {Settings} from '../settings.js';
-import {generateId} from '../lib/runid.js';
 import {debugLog} from '../lib/util.js';
 import {InitOptions} from '../wandb_init.js';
 import {Run} from '../wandb_run.js';
@@ -71,11 +70,11 @@ export function initRunPayload({
   id,
   config,
 }: InitOptions): InitRecord['payload'] {
-  let safeId: string = id || '';
+  const safeId: string = id || '';
   let safeProject: string = project || '';
   const safeEntity: string = entity || '';
   if (safeId === '') {
-    safeId = generateId();
+    throw new Error('id must be set');
   }
   if (safeProject === '') {
     safeProject = 'uncategorized';

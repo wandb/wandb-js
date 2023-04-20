@@ -3,6 +3,7 @@ import {Messenger, initRunPayload} from './interface/messenger.js';
 import {Settings, settingsWithOverrides} from './settings.js';
 import wandb from '../index.js';
 import {debugLog} from './lib/util.js';
+import {generateId} from './lib/runid.js';
 import {login} from './wandb_login.js';
 
 export type InitOptions = {
@@ -24,6 +25,8 @@ export type InitOptions = {
 export const runStack = new Set<Run>();
 
 export async function init(opts: InitOptions = {}): Promise<Run> {
+  // eslint-disable-next-line no-param-reassign
+  opts.id = opts.id || (await generateId());
   wandb.runPromise = new Promise((resolve, reject) => {
     const settings = settingsWithOverrides(opts.settings);
     new Promise<Settings>((settingsResolve, settingsReject) => {
