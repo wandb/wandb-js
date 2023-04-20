@@ -29,9 +29,9 @@ const generateFiles = () => {
       let exports = ``;
       // TODO: there must be a better way to handle default
       if (key === "index") {
-        exports = `import wandb from '${compiledPath}'\nexport default wandb\nexport * from '${compiledPath}'`
+        exports = `import wandb from '${compiledPath}'\nexport default wandb\nexport * from '${compiledPath}'`;
       } else {
-        `export * from '${compiledPath}'`
+        exports = `export * from '${compiledPath}'`;
       }
       return [
         [
