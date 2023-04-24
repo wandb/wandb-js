@@ -52,7 +52,7 @@ export class Auth {
   }
 
   private cleanHost(host: string) {
-    return host.replace(/https?:\/\//, '').replace(/[/ ]+$/, '');
+    return host.split('://').pop()?.split('/')[0].trimEnd();
   }
 
   private appHost(host: string) {
