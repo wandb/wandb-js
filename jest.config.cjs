@@ -5,6 +5,8 @@ module.exports = {
   modulePathIgnorePatterns: ["dist/", "docs/"],
   moduleNameMapper: {
     "^(\\.{1,2}/.*)\\.js$": "$1",
+    "hack-node-fetch": "node-fetch",
+    "node-fetch": "fetch-vcr",
   },
   transform: {
     "^.+\\.m?[tj]sx?$": ["ts-jest", { useESM: true }],
