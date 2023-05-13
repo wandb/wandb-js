@@ -91,12 +91,14 @@ We'll be adding additional features like [Tables](https://docs.wandb.ai/guides/d
 
 ### Langchain
 
-Traces can be logged from [langchain](https://github.com/hwchase17/langchainjs).
+Traces can be logged from [langchain](https://github.com/hwchase17/langchainjs) versions >= 0.0.75.
 
 ```typescript
 import {WandbTracer} from '@wandb/sdk/integrations/langchain';
 
-await WandbTracer.init({project: 'langchain-test'});
+const wbTracer = await WandbTracer.init({project: 'langchain-test'});
 // run your langchain workloads...
+chain.call({input: "My prompt"}, wbTracer);
+// be sure to call finish on the tracer
 await WandbTracer.finish();
 ```

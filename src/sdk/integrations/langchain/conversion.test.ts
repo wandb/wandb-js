@@ -1,5 +1,5 @@
 import {test, expect} from '@jest/globals';
-import {LLMRun} from './types.js';
+import {Run} from 'langchain/callbacks';
 import {
   convertLcRunToWbSpan,
   safeMaybeModelDict,
@@ -8,14 +8,17 @@ import {
 import {WBTraceTree} from '../../data_types/trace_tree.js';
 
 test('Test LLM Conversion', async () => {
-  const run: LLMRun = {
+  const run: Run = {
     start_time: Date.now(),
     end_time: 0,
     serialized: {name: 'test'},
-    prompts: ['hello world'],
-    session_id: 1,
+    inputs: {prompts: ['hello world']},
     execution_order: 1,
-    type: 'llm',
+    run_type: 'llm',
+    child_runs: [],
+    id: '1',
+    name: 'test',
+    child_execution_order: 2,
   };
   const tree = new WBTraceTree(
     convertLcRunToWbSpan(run),
@@ -39,7 +42,7 @@ test('Test LLM Conversion', async () => {
         outputs: null,
       },
     ],
-    span_id: null,
+    span_id: '1',
     span_kind: 'LLM',
     start_time_ms: 100,
     status_code: 'SUCCESS',
