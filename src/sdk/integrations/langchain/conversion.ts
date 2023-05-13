@@ -3,7 +3,7 @@ import {BaseChain} from 'langchain/chains';
 import {BaseLLM} from 'langchain/llms';
 import {Tool} from 'langchain/tools';
 import {BaseChatModel} from 'langchain/chat_models';
-import {LLMRun, ChainRun, ToolRun, BaseRun} from './types.js';
+import {Run, BaseRun} from 'langchain/callbacks';
 import {SpanKind, StatusCode} from '../../data_types/trace_tree.js';
 
 class EmptySpan {
@@ -14,55 +14,53 @@ class EmptySpan {
 
 type MaybeModels = BaseChain | BaseLLM | Tool | BaseChatModel | EmptySpan;
 
-export function getSpanProducingObject(run: BaseRun): MaybeModels {
-  return run.serialized._self || new EmptySpan();
-}
-
 // TODO: type our spans
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export function convertLcRunToWbSpan(run: BaseRun): any {
-  if ((run as LLMRun).prompts != null) {
-    return convertLlmRunToWbSpan(run as LLMRun);
+export function getSpanProducingObject(run: Run): MaybeModels {
+  return (run.serialized as any)._self || new EmptySpan();
+}
+
+export function convertLcRunToWbSpan(run: Run): any {
+  if (run.run_type === 'llm') {
+    return convertLlmRunToWbSpan(run);
   }
-  if ((run as ChainRun).inputs != null) {
-    return convertChainRunToWbSpan(run as ChainRun);
+  if (run.run_type === 'chain') {
+    return convertChainRunToWbSpan(run);
   }
-  if ((run as ToolRun).tool_input != null) {
-    return convertToolRunToWbSpan(run as ToolRun);
+  if (run.run_type === 'tool') {
+    return convertToolRunToWbSpan(run);
   }
   return convertRunToWbSpan(run);
 }
 
-function convertLlmRunToWbSpan(run: LLMRun): any {
+function convertLlmRunToWbSpan(run: Run): any {
   const baseSpan = convertRunToWbSpan(run);
 
-  if (run.response != null) {
-    baseSpan.attributes.llm_output = run.response.llmOutput;
+  if (run.outputs != null) {
+    baseSpan.attributes.llm_output = run.outputs.llmOutput;
   }
-  baseSpan.results = (run.prompts || []).map((prompt: any, ndx: number) => ({
-    inputs: {prompt},
-    outputs:
-      run.response != null &&
-      run.response.generations.length > ndx &&
-      run.response.generations[ndx].length > 0
-        ? {generation: run.response.generations[ndx][0].text}
-        : null,
-  }));
+  baseSpan.results = (run.inputs.prompts || []).map(
+    (prompt: any, ndx: number) => ({
+      inputs: {prompt},
+      outputs:
+        run.outputs != null &&
+        run.outputs.generations.length > ndx &&
+        run.outputs.generations[ndx].length > 0
+          ? {generation: run.outputs.generations[ndx][0].text}
+          : null,
+    })
+  );
   baseSpan.span_kind = SpanKind.LLM;
 
   return baseSpan;
 }
 
-export function convertChainRunToWbSpan(run: ChainRun): any {
+export function convertChainRunToWbSpan(run: Run): any {
   const baseSpan = convertRunToWbSpan(run);
 
   baseSpan.results = [{inputs: run.inputs, outputs: run.outputs}];
-  const childRuns: BaseRun[] = [
-    ...run.child_llm_runs,
-    ...run.child_chain_runs,
-    ...run.child_tool_runs,
-  ];
-  baseSpan.child_spans = childRuns.map((childRun: BaseRun) =>
+  const childRuns: Run[] = run.child_runs;
+  baseSpan.child_spans = childRuns.map((childRun: Run) =>
     convertLcRunToWbSpan(childRun)
   );
   const spanProducer = getSpanProducingObject(run);
@@ -78,19 +76,15 @@ export function convertChainRunToWbSpan(run: ChainRun): any {
   return baseSpan;
 }
 
-export function convertToolRunToWbSpan(run: ToolRun): any {
+export function convertToolRunToWbSpan(run: Run): any {
   const baseSpan = convertRunToWbSpan(run);
-
-  baseSpan.attributes.action = run.action;
+  const serialized = run.serialized as {name: string};
+  baseSpan.attributes.action = JSON.stringify(serialized);
   baseSpan.results = [
-    {inputs: {input: run.tool_input}, outputs: {output: run.output}},
+    {inputs: {input: run.inputs.input}, outputs: {output: run.outputs?.output}},
   ];
-  const childRuns: BaseRun[] = [
-    ...run.child_llm_runs,
-    ...run.child_chain_runs,
-    ...run.child_tool_runs,
-  ];
-  baseSpan.child_spans = childRuns.map((childRun: BaseRun) =>
+  const childRuns: Run[] = run.child_runs;
+  baseSpan.child_spans = childRuns.map((childRun: Run) =>
     convertLcRunToWbSpan(childRun)
   );
   baseSpan.span_kind = SpanKind.TOOL;
@@ -101,10 +95,11 @@ export function convertToolRunToWbSpan(run: ToolRun): any {
 export function convertRunToWbSpan(run: BaseRun): any {
   const attributes: any = {}; // 'extra' in run ? {...run.extra} : {};
   attributes.execution_order = run.execution_order;
+  const serialized = run.serialized as {name: string};
 
   return {
     span_id: run.id != null ? String(run.id) : null,
-    name: run.serialized.name,
+    name: serialized.name,
     start_time_ms: run.start_time,
     end_time_ms: run.end_time,
     status_code: run.error == null ? StatusCode.SUCCESS : StatusCode.ERROR,

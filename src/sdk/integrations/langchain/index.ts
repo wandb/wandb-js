@@ -1,13 +1,10 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
-import {getCallbackManager, ConsoleCallbackHandler} from 'langchain/callbacks';
 import {
-  LLMRun,
-  ChainRun,
-  ToolRun,
   BaseTracer,
-  TracerSession,
-  TracerSessionCreate,
-} from './types.js';
+  Run as LCRun,
+  Callbacks,
+  CallbackManager,
+} from 'langchain/callbacks';
 import {
   getSpanProducingObject,
   convertLcRunToWbSpan,
@@ -21,54 +18,51 @@ import {patchCallbacks} from './patch.js'; // ensurePatched, clearPatches,
 import wandb from '../../../index.js';
 
 export class WandbTracer extends BaseTracer {
+  name = 'wandb_tracer';
+
   static _instance: WandbTracer | null = null;
-
-  static _getCallbackManager: any | null = null;
-
-  static _ConsoleCallbackHandler: any | null = null;
 
   private static _run: Run | null = null;
 
   private static _runArgs: Record<string, unknown> | null = null;
 
-  private _session: TracerSession | null = null;
-
   constructor() {
     super();
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static wrap(obj: any) {
     return patchCallbacks(obj);
   }
 
   static async init(
     runArgs: InitOptions | null = null,
-    includeStdout = true,
-    additionalHandlers: any[] = []
-  ): Promise<Run | null> {
+    verbose = true,
+    additionalHandlers: Callbacks = []
+  ): Promise<CallbackManager | undefined> {
     // ensurePatched();
     const tracer = new WandbTracer();
     await tracer.initRun(runArgs);
-    await tracer.loadSession('');
-    const manager = getCallbackManager();
-    const handlers: any[] = [tracer];
-    if (includeStdout) {
-      handlers.push(new ConsoleCallbackHandler());
-    }
-    manager.setHandlers(handlers.concat(additionalHandlers));
-    return WandbTracer._run;
+    const handlers: BaseTracer[] = [tracer];
+    const manager = await CallbackManager.configure(
+      handlers,
+      additionalHandlers,
+      {
+        verbose,
+      }
+    );
+    return manager;
   }
 
   static async finish() {
     // clearPatches();
     if (WandbTracer._instance) {
       await WandbTracer._instance.finish();
-      const manager = getCallbackManager();
-      manager.setHandlers([]);
     }
   }
 
   get wandbUrl(): string {
+    // TODO: make anonymode work here
     if (WandbTracer._run) {
       return WandbTracer._run.url();
     }
@@ -114,32 +108,13 @@ export class WandbTracer extends BaseTracer {
     }
   }
 
-  _generateId(): number | string | null {
-    return null;
-  }
-
-  protected async persistRun(run: LLMRun | ChainRun | ToolRun): Promise<void> {
+  protected async persistRun(run: LCRun): Promise<void> {
+    console.log('persistRun', run);
     this._logTrace(
       new WBTraceTree(
         convertLcRunToWbSpan(run),
         safeMaybeModelDict(getSpanProducingObject(run))
       )
     );
-  }
-
-  protected async persistSession(
-    sessionCreate: TracerSessionCreate
-  ): Promise<TracerSession> {
-    return {id: 1, ...sessionCreate};
-  }
-
-  async loadSession(sessionName: string): Promise<TracerSession> {
-    this._session = {id: 1, start_time: Number(new Date()), name: sessionName};
-    return this._session;
-  }
-
-  async loadDefaultSession(): Promise<TracerSession> {
-    this._session = {id: 1, start_time: Number(new Date()), name: 'default'};
-    return this._session;
   }
 }

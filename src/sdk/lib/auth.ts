@@ -27,13 +27,13 @@ export class Auth {
         this.key = await this.promptKey(host);
       } else {
         try {
-          const domain = this.cleanHost(host);
+          const domain = this.cleanHost(host) || 'api.wandb.ai';
           const {password} = netrc.machines[domain];
           this.key = password;
         } catch {
           this.key = await this.promptKey(host);
           if (this.key != null) {
-            netrc.save(this.cleanHost(host), this.key);
+            netrc.save(this.cleanHost(host) || 'api.wandb.ai', this.key);
           }
         }
       }
