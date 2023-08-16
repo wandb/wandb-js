@@ -4,6 +4,7 @@ import {
   Run as LCRun,
   Callbacks,
   CallbackManager,
+  CallbackManagerOptions,
 } from 'langchain/callbacks';
 import {
   getSpanProducingObject,
@@ -36,22 +37,33 @@ export class WandbTracer extends BaseTracer {
   }
 
   static async init(
-    runArgs: InitOptions | null = null,
-    verbose = true,
-    additionalHandlers: Callbacks = []
+    runArgs?: InitOptions | null,
+    verbose?: boolean,
+    additionalHandlers?: Callbacks,
+    callbackManagerParams?: {
+      localHandlers?: Callbacks,
+      inheritableTags?: string[],
+      localTags?: string[],
+      inheritableMetadata?: Record<string, unknown>,
+      localMetadata?: Record<string, unknown>,
+      options?: CallbackManagerOptions
+    }
   ): Promise<CallbackManager | undefined> {
     // ensurePatched();
     const tracer = new WandbTracer();
     await tracer.initRun(runArgs);
-    const handlers: BaseTracer[] = [tracer];
-    const manager = await CallbackManager.configure(
+    const handlers = [tracer];
+
+    return CallbackManager.configure(
       handlers,
-      additionalHandlers,
-      {
-        verbose,
-      }
-    );
-    return manager;
+      additionalHandlers || callbackManagerParams?.localHandlers,
+      callbackManagerParams?.inheritableTags,
+      callbackManagerParams?.localTags,
+      callbackManagerParams?.inheritableMetadata,
+      callbackManagerParams?.localMetadata, {
+        ...callbackManagerParams?.options,
+        verbose: verbose ?? true,
+      });
   }
 
   static async finish() {
