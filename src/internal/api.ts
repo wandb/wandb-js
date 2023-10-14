@@ -163,7 +163,17 @@ export class InternalApi {
   upsertRun(
     vars: UpsertBucketMutationVariables
   ): Promise<UpsertBucketMutation> {
-    return this.execute(UpsertBucketMutationDocument, vars);
+    return this.execute(UpsertBucketMutationDocument, this.fixConfig(vars));
+  }
+
+  private fixConfig(
+    vars: UpsertBucketMutationVariables
+  ): UpsertBucketMutationVariables {
+    const fixedVars = vars;
+    Object.keys(vars.config || {}).forEach(key => {
+      fixedVars.config[key] = {value: vars.config[key], desc: ''};
+    });
+    return fixedVars;
   }
 
   viewer(): Promise<ViewerQuery> {
