@@ -27,7 +27,11 @@ export class Sender {
   constructor(settings: Settings, port?: MessagePort) {
     this.queue = new Queue();
     this.delay = new Delay(1000);
-    this.api = new InternalApi(settings.baseUrl, settings.apiKey);
+    this.api = new InternalApi(
+      settings.baseUrl,
+      settings.apiKey,
+      settings.entity
+    );
     this.filestream = new FileStream(settings);
     this._shutdown = false;
     this.setupPort(port).catch(e => {
@@ -57,7 +61,7 @@ export class Sender {
     // TODO: wait on the setup thread
     this._shutdown = false;
     // TODO: this could go to a better place
-    await this.api.ensureDefaultEntity();
+    await this.api.ensureDefaultEntity().catch(e => this.error(e));
     this._thread = this._thread_body();
   }
 

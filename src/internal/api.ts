@@ -153,10 +153,14 @@ export class InternalApi {
       const viewer = await this.viewer();
       if (viewer?.viewer) {
         this.defaultEntity = viewer.viewer.entity || '';
+      } else {
+        throw new Error('Invalid API key');
       }
     }
     if (this.defaultEntity === '') {
-      throw new Error('Unable to determine default entity');
+      throw new Error(
+        'Unable to determine default entity, set via the WANDB_ENTITY env var.'
+      );
     }
   }
 
